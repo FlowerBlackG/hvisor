@@ -68,10 +68,10 @@ monitor:
 	gdb-multiarch \
 		-ex 'file $(hvisor_elf)' \
 		-ex 'set arch $(GDB_ARCH)' \
-		-ex 'target remote:1234'
+		-ex 'target remote:3333'
 
 jlink-server:
-	JLinkGDBServer -select USB -if JTAG -device Cortex-A53 -port 1234
+	JLinkGDBServer -select USB -if SWD -device Cortex-A55 -port 1234
 
 cp: all
 	cp $(hvisor_bin) ~/tftp

@@ -1,6 +1,6 @@
 	PTE_TABLE_FLAGS =0x3 //11
-	PAGE_DEFAULT_FLAG=0x741 //11101000001
-	PAGE_DEVICE_FLAG=0x745 //11101000101
+	// PAGE_DEFAULT_FLAG=0x741 //11101000001
+    // PAGE_DEVICE_FLAG=0x745 //11101000101
 
     MAIR_FLAG=0x004404ff //10001000000010011111111
     SCTLR_FLAG=0x30c51835 //110000110001010001100000110101
@@ -38,6 +38,9 @@ boot_pt_init:
 
 
 enable_boot_pt:
+    stp	x29, x30, [sp, #-16]!
+    mov	x29, sp
+
     adrp x1, boot_pt_l0
     msr ttbr0_el2, x1
 
@@ -53,9 +56,35 @@ enable_boot_pt:
 
 	/* Enable MMU, allow cacheability for instructions and data */
 	ldr	x1, =SCTLR_FLAG
+    bl uart_puts_c
 	msr	sctlr_el2, x1      // system control register
+    bl uart_puts_c
 
 	isb
 	tlbi alle2
 	dsb	nsh
+
+    ldp	x29, x30, [sp], #16
+
     ret
+
+
+test_ldaxr:
+    stp	x29, x30, [sp, #-16]!
+    mov	x29, sp
+    MOV X0, #0              // 初始化地址为 0
+    LDR X1, =shared_var     // 加载全局变量的地址到 X1
+retry:
+    LDAXR X2, [X1]          // 从地址 X1 读取排他值到 X2
+    ADD X2, X2, #1          // 修改值
+    STLXR W3, X2, [X1]      // 尝试存储值，W3 返回状态
+
+    bl uart_puts_c
+    CBNZ W3, retry              // 检查存储是否成功
+    bl uart_puts_c
+    ldp	x29, x30, [sp], #16
+    ret
+
+.section .data
+shared_var:
+    .word 0                 // 初始化全局变量为 0
