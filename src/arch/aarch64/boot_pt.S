@@ -18,12 +18,13 @@ boot_pt_l1:
 
     .section .text
     .global set_boot_pt
+
 boot_pt_init:
     // TODO: re-enable hvisor pt when system boot success
     adrp x1, boot_pt_l0
     adrp x2, boot_pt_l1
     add x2, x2, PTE_TABLE_FLAGS
-    str x2, [x1]                // set boot_pt_l0, index=0 -> boot_pt_l1
+    str x2, [x1]                      // set boot_pt_l0, index=0 -> boot_pt_l1
 
     adrp x1, boot_pt_l1
     ldr x2, =(0x0 | PAGE_DEFAULT_FLAG) // device memory at 0x0 ~ 0x40000000
@@ -38,7 +39,7 @@ boot_pt_init:
 
 
 enable_boot_pt:
-    stp	x29, x30, [sp, #-16]!
+    stp	x29, x30, [sp, #-0x10]!
     mov	x29, sp
 
     adrp x1, boot_pt_l0
@@ -56,22 +57,20 @@ enable_boot_pt:
 
 	/* Enable MMU, allow cacheability for instructions and data */
 	ldr	x1, =SCTLR_FLAG
-    bl uart_puts_c
+    // bl uart_puts_c
 	msr	sctlr_el2, x1      // system control register
-    bl uart_puts_c
+    // bl uart_puts_c
 
 	isb
 	tlbi alle2
 	dsb	nsh
 
-    ldp	x29, x30, [sp], #16
+    ldp	x29, x30, [sp], #0x10
 
     ret
 
 
 test_ldaxr:
-    stp	x29, x30, [sp, #-16]!
-    mov	x29, sp
     MOV X0, #0              // 初始化地址为 0
     LDR X1, =shared_var     // 加载全局变量的地址到 X1
 retry:
@@ -79,10 +78,7 @@ retry:
     ADD X2, X2, #1          // 修改值
     STLXR W3, X2, [X1]      // 尝试存储值，W3 返回状态
 
-    bl uart_puts_c
     CBNZ W3, retry              // 检查存储是否成功
-    bl uart_puts_c
-    ldp	x29, x30, [sp], #16
     ret
 
 .section .data
