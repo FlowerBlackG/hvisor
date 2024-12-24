@@ -149,6 +149,39 @@ pub extern "C" fn boot_pt_init(l0_pt: &mut PageTables, l1_pt: &mut PageTables) {
             for i in 1..ENTRY_PER_PAGE {
                 l0_pt.entry[i] = PTEDescriptor::new(0x40000000*i, MemoryType::Device, PTEType::Block);
             }
+        } else if #[cfg(all(feature = "platform_rk3568", target_arch = "aarch64"))]     {
+            // EMMC fe310000    0xfe200000-0xfe400000
+            // GIC  fd400000    0xfd400000-0xfd600000
+            // UART fe660000    0xfe600000-0xfe800000
+            const L2_SHIFT: usize = 21;
+            l0_pt.entry[0] = PTEDescriptor::new(0x0, MemoryType::Normal, PTEType::Block);
+            l0_pt.entry[1] = PTEDescriptor::new(0x40000000, MemoryType::Normal, PTEType::Block);
+            l0_pt.entry[2] = PTEDescriptor::new(0x80000000, MemoryType::Normal, PTEType::Block);
+            l0_pt.entry[3] = PTEDescriptor::new(l1_pt_entry, MemoryType::Null, PTEType::Page);
+            // 0xc0000000 ~ 0xf0000000
+            const DEVICE_BOUND: usize = (0xf0000000 - 0xc0000000) / (1 << L2_SHIFT);
+            for i in 0..DEVICE_BOUND {
+                l1_pt.entry[i] = PTEDescriptor::new(
+                    0x0c0000000 + (i << L2_SHIFT),
+                    MemoryType::Normal,
+                    PTEType::Block,
+                );
+            }
+            // 0xf0000000 ~ 0x10000_0000
+            for i in DEVICE_BOUND..ENTRY_PER_PAGE {
+                l1_pt.entry[i] = PTEDescriptor::new(
+                    0x0c0000000 + (i << L2_SHIFT),
+                    MemoryType::Device,
+                    PTEType::Block,
+                );
+            }
+            // l0_pt.entry[4] = PTEDescriptor::new(0x100000000, MemoryType::Normal, PTEType::Block);
+            // l0_pt.entry[5] = PTEDescriptor::new(0x140000000, MemoryType::Normal, PTEType::Block);
+            // l0_pt.entry[6] = PTEDescriptor::new(0x180000000, MemoryType::Normal, PTEType::Block);
+            // l0_pt.entry[7] = PTEDescriptor::new(0x1c0000000, MemoryType::Normal, PTEType::Block);
+            for i in 4..ENTRY_PER_PAGE {
+                l0_pt.entry[i] = PTEDescriptor::invalid();
+            }
         } else {
             l0_pt.entry[0] = PTEDescriptor::new(0x0, MemoryType::Device, PTEType::Block);
             for i in 1..7 {
@@ -159,6 +192,9 @@ pub extern "C" fn boot_pt_init(l0_pt: &mut PageTables, l1_pt: &mut PageTables) {
             }
         }
     }
+
+
+    
 
 }
 
