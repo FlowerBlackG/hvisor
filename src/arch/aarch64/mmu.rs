@@ -192,10 +192,6 @@ pub extern "C" fn boot_pt_init(l0_pt: &mut PageTables, l1_pt: &mut PageTables) {
             }
         }
     }
-
-
-    
-
 }
 
 // init mmu
