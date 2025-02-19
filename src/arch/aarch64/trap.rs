@@ -268,16 +268,20 @@ fn handle_hvc(regs: &mut GeneralRegisters) {
 fn handle_smc(regs: &mut GeneralRegisters) {
     let (code, arg0, arg1, arg2) = (regs.usr[0], regs.usr[1], regs.usr[2], regs.usr[3]);
     let cpu_data = this_cpu_data() as &mut PerCpu;
-    //info!(
-    //    "SMC from CPU{}, func_id:{:#x?}, arg0:{:#x?}, arg1:{:#x?}, arg2:{:#x?}",
-    //    cpu_data.id, code, arg0, arg1, arg2
-    //);
+    // info!(
+    //     "SMC from CPU{}, func_id:{:#x?}, arg0:{:#x?}, arg1:{:#x?}, arg2:{:#x?}",
+    //     cpu_data.id, code, arg0, arg1, arg2
+    // );
     let result = match code & SMC_TYPE_MASK {
         SmcType::ARCH_SC => handle_arch_smc(regs, code, arg0, arg1, arg2),
         SmcType::STANDARD_SC => handle_psci_smc(regs, code, arg0, arg1, arg2),
-        SmcType::SIP_SC => unsafe {
-            (regs.usr[0], regs.usr[1], regs.usr[2], regs.usr[3]) = smc_call!(code, arg0, arg1, arg2);
-            regs.usr[0]
+        SmcType::SIP_SC => {
+            let ret = smc_call(code, &regs.usr[1..18]);
+            regs.usr[0] = ret[0];
+            regs.usr[1] = ret[1];
+            regs.usr[2] = ret[2];
+            regs.usr[2] = ret[3];
+            ret[0]
         },
         _ => {
             warn!("unsupported smc");
@@ -307,8 +311,8 @@ fn psci_emulate_features_info(code: u64) -> u64 {
 
 fn psci_emulate_cpu_on(regs: &mut GeneralRegisters) -> u64 {
     // Todo: Check if `cpu` is in the cpuset of current zone
-    let cpu = mpidr_to_cpuid(regs.usr[1]);
-    info!("psci: try to wake up cpu {}", cpu);
+    let cpu: u64 = mpidr_to_cpuid(regs.usr[1]);
+    info!("psci: try to wake up cpu {} {}", cpu, regs.usr[1]);
 
     let target_data = get_cpu_data(cpu as _);
     let _lock = target_data.ctrl_lock.lock();
