@@ -241,7 +241,7 @@ fn vgicv3_dist_misc_access(mmio: &mut MMIOAccess, gicd_base: usize) -> HvResult 
             mmio_perform_access(gicd_base, mmio);
         }
     } else {
-        todo!()
+        todo!("mmio.address = {:#x?}", reg)
     }
 
     Ok(())

@@ -157,7 +157,10 @@ fn rust_main(cpuid: usize, host_dtb: usize) {
     arch::trap::install_trap_vector();
 
     let mut is_primary = false;
-    println!("Hello, HVISOR!");
+    extern "C" {
+        fn skernel();
+    }
+    println!("Hello, start HVISOR at {:#x?}!", skernel as usize);
     if MASTER_CPU.load(Ordering::Acquire) == -1 {
         MASTER_CPU.store(cpuid as i32, Ordering::Release);
         is_primary = true;

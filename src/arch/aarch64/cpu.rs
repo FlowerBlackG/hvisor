@@ -148,11 +148,12 @@ impl ArchCpu {
     }
 
     pub fn run(&mut self) -> ! {
+        info!("run cpu_id {} {}", this_cpu_id(), self.cpuid);
         assert!(this_cpu_id() == self.cpuid);
         this_cpu_data().activate_gpm();
         self.reset(this_cpu_data().cpu_on_entry, this_cpu_data().dtb_ipa);
         self.power_on = true;
-        info!("cpu {} started", self.cpuid);
+        info!("cpu {} started at {:#x?}", self.cpuid, this_cpu_data().cpu_on_entry);
         unsafe {
             vmreturn(self.guest_reg() as *mut _ as usize);
         }
@@ -186,14 +187,13 @@ impl ArchCpu {
         self.reset(0, this_cpu_data().dtb_ipa);
         unsafe {
             PARKING_MEMORY_SET.get().unwrap().activate();
-            info!("cpu {} started from parking", self.cpuid);
             vmreturn(self.guest_reg() as *mut _ as usize);
         }
     }
 }
 
 pub fn mpidr_to_cpuid(mpidr: u64) -> u64 {
-    mpidr & 0xff00ffffff
+    (mpidr >> 8) & 0xff
 }
 
 pub fn this_cpu_id() -> usize {

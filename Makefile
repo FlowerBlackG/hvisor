@@ -10,11 +10,11 @@ OBJCOPY ?= rust-objcopy --binary-architecture=$(ARCH)
 # - platform_qemu, platform_zcu102, platform_imx8mp
 # - gicv2, gicv3 (for aarch64)
 # - plic, aia (for riscv64)
-FEATURES ?= platform_qemu,gicv3
+FEATURES ?= platform_rk3588,gicv3
 
 # AVAIABLE "BOARD" VALUES:
 # - qemu, zcu102, 3a5000
-BOARD ?= qemu
+BOARD ?= rk3588
 
 ifeq ($(ARCH),aarch64)
     RUSTC_TARGET := aarch64-unknown-none
@@ -62,8 +62,7 @@ elf:
 
 disa:
 	readelf -a $(hvisor_elf) > hvisor-elf.txt
-# rust-objdump --disassemble $(hvisor_elf) > hvisor.S
-	rust-objdump --disassemble --source $(hvisor_elf) > hvisor.S
+	rust-objdump --disassemble --source --line-numbers $(hvisor_elf) > hvisor.S
 
 run: all
 	$(QEMU) $(QEMU_ARGS)
@@ -78,10 +77,10 @@ monitor:
 	gdb-multiarch \
 		-ex 'file $(hvisor_elf)' \
 		-ex 'set arch $(GDB_ARCH)' \
-		-ex 'target remote:1234'
+		-ex 'target remote:3333'
 
 jlink-server:
-	JLinkGDBServer -select USB -if JTAG -device Cortex-A53 -port 1234
+	JLinkGDBServer -select USB -if SWD -device Cortex-A55 -port 1234
 
 cp:
 	cp $(hvisor_bin) ~/tftp

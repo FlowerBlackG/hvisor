@@ -23,3 +23,9 @@ mod loongson_uart;
 
 #[cfg(target_arch = "loongarch64")]
 pub use loongson_uart::{console_getchar, console_putchar};
+
+#[cfg(any(feature = "platform_rk3568", feature = "platform_rk3588"))]
+pub mod uart_16550;
+
+#[cfg(any(feature = "platform_rk3568", feature = "platform_rk3588"))]
+pub use uart_16550::{console_getchar, console_putchar};
