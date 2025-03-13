@@ -1,8 +1,9 @@
 use crate::{arch::zone::HvArchZoneConfig, config::*};
 
-pub const ROOT_ZONE_DTB_ADDR: u64 = 0x08300000;
-pub const ROOT_ZONE_KERNEL_ADDR: u64 = 0x00280000;
-pub const ROOT_ZONE_ENTRY: u64 = 0x00280000;
+pub const ROOT_ZONE_DTB_ADDR: u64 = 0xa0000000;
+pub const ROOT_ZONE_KERNEL_ADDR: u64 = 0x60080000 ;
+pub const ROOT_ZONE_ENTRY: u64 = 0x60080000 ;
+//pub const ROOT_ZONE_CPUS: u64 = (1 << 0) ;
 pub const ROOT_ZONE_CPUS: u64 = (1 << 0)|(1 << 1)|(1<<2)|(1<<3) ;
 
 pub const ROOT_ZONE_NAME: &str = "root-linux";
@@ -26,7 +27,7 @@ pub const ROOT_ZONE_MEMORY_REGIONS: [HvConfigMemoryRegion; 60] = [
         mem_type: MEM_TYPE_RAM,
         physical_start: 0x0200000,
         virtual_start: 0x0200000,
-        size: 0xE6E00000,
+        size: 0xe6E00000,
     }, // ram
     HvConfigMemoryRegion {
         mem_type: MEM_TYPE_RAM,
@@ -44,12 +45,14 @@ pub const ROOT_ZONE_MEMORY_REGIONS: [HvConfigMemoryRegion; 60] = [
         virtual_start: 0xe7000000,
         size: 0x7000000,
     }, //uart
+    
     HvConfigMemoryRegion {
         mem_type: MEM_TYPE_RAM,
         physical_start: 0xee000000,
         virtual_start: 0xee000000,
         size: 0x4000000,
     }, //uart
+    
 
     
     HvConfigMemoryRegion {
@@ -231,12 +234,14 @@ pub const ROOT_ZONE_MEMORY_REGIONS: [HvConfigMemoryRegion; 60] = [
         virtual_start: 0xFE5f0000,
         size: 0x10000,
     }, //uart
+    
     HvConfigMemoryRegion {
         mem_type: MEM_TYPE_RAM,
         physical_start: 0x1f0000000,
         virtual_start: 0x1f0000000,
-        size: 0x40000000,
+        size: 0x10000000,
     }, //uart
+    
     HvConfigMemoryRegion {
         mem_type: MEM_TYPE_IO,
         physical_start: 0xFDD00000,
@@ -482,8 +487,8 @@ pub const ROOT_ZONE_MEMORY_REGIONS: [HvConfigMemoryRegion; 6] = [
 ];
 */
 
-pub const ROOT_ZONE_IRQS: [u32; 2] = [
-   0x27, 0x76];
+pub const ROOT_ZONE_IRQS: [u32; 8] = [
+   51,109,141,142,143,144,145,146];
 
 pub const ROOT_ARCH_ZONE_CONFIG: HvArchZoneConfig = HvArchZoneConfig {
     gicd_base: 0xfd400000,
@@ -492,7 +497,7 @@ pub const ROOT_ARCH_ZONE_CONFIG: HvArchZoneConfig = HvArchZoneConfig {
     gicr_size: 0xc0000,
     gicc_base: 0,
     gicc_size: 0,
-    gicc_offset: 0,
+    gicc_offset: 0x0,
     gich_base: 0,
     gich_size: 0,
     gicv_base: 0,
@@ -500,5 +505,4 @@ pub const ROOT_ARCH_ZONE_CONFIG: HvArchZoneConfig = HvArchZoneConfig {
     gits_base: 0,
     gits_size: 0,
 };
-
 pub const ROOT_ZONE_IVC_CONFIG: [HvIvcConfig; 0] = [];
