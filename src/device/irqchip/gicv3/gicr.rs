@@ -90,6 +90,7 @@ impl LpiPropTable {
         let gicd_typer =
             unsafe { ptr::read_volatile((host_gicd_base() + GICD_TYPER) as *const u32) };
         let id_bits = (gicd_typer >> 19) & 0x1f;
+        info!("LpiPropTable::new(): id_bits: {:#x}", id_bits);
         let page_num: usize = ((1 << (id_bits + 1)) - 8192) / PAGE_SIZE;
         let f = Frame::new_contiguous(page_num, 0).unwrap();
         let propreg = f.start_paddr() | 0x78f;

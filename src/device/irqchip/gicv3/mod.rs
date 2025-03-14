@@ -443,10 +443,7 @@ pub fn disable_irqs() {
 
 pub fn primary_init_early() {
     let root_config = root_zone_config();
-<<<<<<< HEAD
 
-=======
->>>>>>> [Feature] add rk3588 support
     GIC.call_once(|| Gic {
         gicd_base: root_config.arch_config.gicd_base,
         gicr_base: root_config.arch_config.gicr_base,
