@@ -7,7 +7,7 @@ use crate::device::virtio_trampoline::{MAX_DEVS, MAX_REQ, VIRTIO_BRIDGE, VIRTIO_
 use crate::error::HvResult;
 use crate::percpu::{get_cpu_data, this_zone, PerCpu};
 use crate::zone::{
-    all_zones_info, find_zone, is_this_root_zone, remove_zone, this_zone_id, zone_create, ZoneInfo,
+    add_zone, all_zones_info, find_zone, is_this_root_zone, remove_zone, this_zone_id, zone_create, ZoneInfo
 };
 
 use crate::event::{send_event, IPI_EVENT_SHUTDOWN, IPI_EVENT_VIRTIO_INJECT_IRQ, IPI_EVENT_WAKEUP};
@@ -232,6 +232,7 @@ impl<'a> HyperCall<'a> {
             let cpuid = this_cpu_id();
             assert_eq!(cpuid, 0);
         }
+        add_zone(zone);
         drop(_lock);
         HyperCallResult::Ok(0)
     }
@@ -249,7 +250,12 @@ impl<'a> HyperCall<'a> {
         }
         let zone = match find_zone(zone_id as _) {
             Some(zone) => zone,
-            _ => return hv_result_err!(EEXIST),
+            _ => {
+                return hv_result_err!(
+                    EINVAL,
+                    format!("Shutdown zone: zone {} not found!", zone_id)
+                )
+            }
         };
         let zone_r = zone.read();
 

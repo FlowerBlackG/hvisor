@@ -3,6 +3,7 @@
 /test-img
 /hvisor.S
 /hvisor-elf.txt
+platform/*
 /images/aarch64/virtdisk/*
 /images/aarch64/kernel/*
 /images/aarch64/devicetree/*.dtb

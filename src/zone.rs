@@ -178,7 +178,10 @@ pub fn zone_create(config: &HvZoneConfig) -> HvResult<Arc<RwLock<Zone>>> {
     let zone_id = config.zone_id as usize;
 
     if find_zone(zone_id).is_some() {
-        return hv_result_err!(EEXIST);
+        return hv_result_err!(
+            EINVAL,
+            format!("Failed to create zone: zone_id {} already exists", zone_id)
+        );
     }
 
     let mut zone = Zone::new(zone_id, &config.name);
@@ -194,9 +197,19 @@ pub fn zone_create(config: &HvZoneConfig) -> HvResult<Arc<RwLock<Zone>>> {
         &config.alloc_pci_devs,
     );
 
-    config.cpus().iter().for_each(|cpu_id| {
+    for cpu_id in config.cpus().iter() {
+        if let Some(zone) = get_cpu_data(*cpu_id as _).zone.clone() {
+            return hv_result_err!(
+                EBUSY,
+                format!(
+                    "Failed to create zone: cpu {} already belongs to zone {}",
+                    cpu_id,
+                    zone.read().id
+                )
+            );
+        }
         zone.cpu_set.set_bit(*cpu_id as _);
-    });
+    };
 
     let mut dtb_ipa = INVALID_ADDRESS as u64;
     for region in config.memory_regions() {
@@ -223,7 +236,6 @@ pub fn zone_create(config: &HvZoneConfig) -> HvResult<Arc<RwLock<Zone>>> {
             cpu_data.dtb_ipa = dtb_ipa as _;
         });
     }
-    add_zone(new_zone_pointer.clone());
 
     Ok(new_zone_pointer)
 }

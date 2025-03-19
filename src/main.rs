@@ -59,7 +59,7 @@ use arch::{cpu::cpu_start, entry::arch_entry};
 use config::root_zone_config;
 use core::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use percpu::PerCpu;
-use zone::zone_create;
+use zone::{add_zone, zone_create};
 
 #[cfg(all(feature = "platform_qemu", target_arch = "aarch64"))]
 use crate::arch::iommu::iommu_init;
@@ -122,8 +122,10 @@ fn primary_init_early() {
     iommu_init();
 
     #[cfg(not(test))]
-    zone_create(root_zone_config()).unwrap();
-
+    {
+        let zone = zone_create(root_zone_config()).unwrap();
+        add_zone(zone);
+    }
     INIT_EARLY_OK.store(1, Ordering::Release);
 }
 
